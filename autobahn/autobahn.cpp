@@ -495,23 +495,30 @@ void session::process_challenge(const wamp_msg_t& msg)
     {
         anymap extra = msg[2].extract<anymap>();
 
-        std::string salt = extra["salt"];
-        int iterations = extra["iterations"];
         std::string challenge = extra["challenge"];
+        std::string secret = m_signature;
 
-        // derive a key
-        Poco::PBKDF2Engine<Poco::HMACEngine<util::SHA256Engine>> pbkdf2(salt, iterations);
-        pbkdf2.update(m_signature);
-        auto key = pbkdf2.digest();
+        if (extra.contains("salt"))
+        {
+            std::string salt = extra["salt"];
+            int iterations = extra["iterations"];
 
-        std::stringstream ssKey;
-        Poco::Base64Encoder encoderKey(ssKey);
-        for (auto c : key)
-            encoderKey << c;
-        encoderKey.close();
+            // derive a key
+            Poco::PBKDF2Engine<Poco::HMACEngine<util::SHA256Engine>> pbkdf2(salt, iterations);
+            pbkdf2.update(m_signature);
+            auto key = pbkdf2.digest();
+
+            std::stringstream ssKey;
+            Poco::Base64Encoder encoderKey(ssKey);
+            for (auto c : key)
+                encoderKey << c;
+            encoderKey.close();
+
+            secret = ssKey.str();
+        }
 
         // sign
-        Poco::HMACEngine<util::SHA256Engine> hmac(ssKey.str());
+        Poco::HMACEngine<util::SHA256Engine> hmac(secret);
         hmac.update(challenge);
         auto signature = hmac.digest();
 
