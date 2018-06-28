@@ -99,9 +99,9 @@ bool session::start(const Poco::Net::SocketAddress& addr, bool useSSL)
 
         m_running = true;
     }
-    catch (Poco::Exception&)
+    catch (Poco::Exception& e)
     {
-        return false;
+		e.rethrow();
     }
 
     m_recvThread = std::thread([this] { recvThread(); });
