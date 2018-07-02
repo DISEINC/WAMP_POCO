@@ -78,7 +78,13 @@ bool session::start(const Poco::Net::SocketAddress& addr, bool useSSL)
 
     try
     {
-        Poco::Net::HTTPRequest request("GET", "/ws", Poco::Net::HTTPRequest::HTTP_1_1);
+		std::string url;
+		if (useSSL)
+			url = "https://" + addr.host().toString() + "/ws";
+		else
+			url = "http://" + addr.host().toString() + "/ws";
+
+		Poco::Net::HTTPRequest request("GET", url.c_str(), Poco::Net::HTTPRequest::HTTP_1_1);
         Poco::Net::HTTPResponse response;
 
         request.add("Sec-WebSocket-Protocol", "wamp.2.json");
