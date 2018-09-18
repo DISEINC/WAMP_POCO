@@ -38,6 +38,7 @@
 #include <Poco/JSON/Parser.h>
 #include <Poco/Logger.h>
 #include <Poco/Net/SocketAddress.h>
+#include <Poco/Net/HTTPClientSession.h>
 
 // thank you microsoft
 #ifdef ERROR
@@ -175,7 +176,7 @@ public:
     * Start listening on the IStream provided to the constructor
     * of this session.
     */
-    bool start(const Poco::Net::SocketAddress& addr, bool useSSL = false);
+	bool start(std::string host, Poco::UInt16 port, bool useSSL, const Poco::Net::HTTPClientSession::ProxyConfig proxyConfig);
 
     /*!
     * Closes the IStream and the OStream provided to the constructor

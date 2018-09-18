@@ -71,20 +71,14 @@ session::~session()
     stop(eptr);
 }
 
-bool session::start(const Poco::Net::SocketAddress& addr, bool useSSL)
+bool session::start(std::string host, Poco::UInt16 port, bool useSSL, const Poco::Net::HTTPClientSession::ProxyConfig proxyConfig)
 {
     auto eptr = std::make_exception_ptr(connection_error("connection closed by session reconnect"));
     stop(eptr);
 
     try
     {
-		std::string url;
-		if (useSSL)
-			url = "https://" + addr.host().toString() + "/ws";
-		else
-			url = "http://" + addr.host().toString() + "/ws";
-
-		Poco::Net::HTTPRequest request("GET", url.c_str(), Poco::Net::HTTPRequest::HTTP_1_1);
+		Poco::Net::HTTPRequest request("GET", "/ws", Poco::Net::HTTPRequest::HTTP_1_1);
         Poco::Net::HTTPResponse response;
 
         request.add("Sec-WebSocket-Protocol", "wamp.2.json");
@@ -93,12 +87,18 @@ bool session::start(const Poco::Net::SocketAddress& addr, bool useSSL)
         {
             Poco::Net::Context::Ptr ctx =
                 new Poco::Net::Context(Poco::Net::Context::CLIENT_USE, "", Poco::Net::Context::VERIFY_NONE, 9, true);
-            m_httpsession = std::make_unique<Poco::Net::HTTPSClientSession>(addr.host().toString(), addr.port(), ctx);
+
+			m_httpsession = std::make_unique<Poco::Net::HTTPSClientSession>(host, port, ctx);
         }
         else
         {
-            m_httpsession = std::make_unique<Poco::Net::HTTPClientSession>(addr);
+			m_httpsession = std::make_unique<Poco::Net::HTTPClientSession>(host, port);
         }
+
+		if (!proxyConfig.host.empty())
+		{
+			m_httpsession->setProxyConfig(proxyConfig);
+		}
 
         m_ws = std::make_shared<ApplicationWebSocket>(*m_httpsession, request, response);
         m_ws->setReceiveTimeout(0);
