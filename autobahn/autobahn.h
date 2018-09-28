@@ -176,6 +176,7 @@ public:
     * Start listening on the IStream provided to the constructor
     * of this session.
     */
+    bool start(const Poco::Net::SocketAddress& addr, bool useSSL = false);
 	bool start(std::string host, Poco::UInt16 port, bool useSSL, const Poco::Net::HTTPClientSession::ProxyConfig proxyConfig);
 
     /*!
